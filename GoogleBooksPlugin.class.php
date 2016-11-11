@@ -7,7 +7,7 @@ class GoogleBooksPlugin extends StudIPPlugin implements FilesystemPlugin {
 
     public function getFileSelectNavigation()
     {
-        $nav = new Navigation(_("Bibliothek"));
+        $nav = new Navigation(_("GoogleBooks"));
         $nav->setImage(Icon::create("literature", "clickable"));
         return $nav;
     }
@@ -47,9 +47,15 @@ class GoogleBooksPlugin extends StudIPPlugin implements FilesystemPlugin {
         curl_exec($request);
         curl_close($request);*/
 
+        $free = true;
+
         $folder = new VirtualFolderType();
 
-        $url = "https://www.googleapis.com/books/v1/volumes?q=".urlencode($text)."&key=".urlencode(self::$googlebooksapikey);
+        $url = "https://www.googleapis.com/books/v1/volumes?q=".urlencode($text)."&key=".urlencode(self::$googlebooksapikey)."&maxResults=40";
+
+        if ($free) {
+            $url .= "&filter=free-ebooks";
+        }
 
         $result = file_get_contents($url);
         if ($result) {
@@ -57,7 +63,11 @@ class GoogleBooksPlugin extends StudIPPlugin implements FilesystemPlugin {
             foreach ((array) $result['items'] as $item) {
                 $folder->createFile(array(
                     'id' => $item['id'],
-                    'name' => $item['volumeInfo']['title']
+                    'name' => $item['volumeInfo']['title'],
+                    'description' => $item['volumeInfo']['publishedDate'].", ".implode(", ", (array) $item['volumeInfo']['authors']),
+                    'url' => $item['accessInfo']['pdf']['downloadLink']
+                    //$item['accessInfo']['epub']['downloadLink']
+                    //$item['accessInfo']['webReaderLink']
                 ));
             }
         }
