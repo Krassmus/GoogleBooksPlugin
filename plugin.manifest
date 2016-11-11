@@ -1,0 +1,4 @@
+pluginname=GoogleBooksPlugin
+pluginclassname=GoogleBooksPlugin
+version=1.0
+origin=data-quest
