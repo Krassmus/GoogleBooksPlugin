@@ -24,14 +24,19 @@ class GoogleBooksPlugin extends StudIPPlugin implements FilesystemPlugin {
         $info = studip_utf8decode(json_decode($info, true));
         $download = $info['accessInfo']['pdf']['downloadLink'] ?: $info['accessInfo']['epub']['downloadLink'];
         $tmp_path = $GLOBALS['TMP_PATH']."/".md5(uniqid());
-        file_put_contents($tmp_path, file_get_contents($download));
-        $file = array(
-            'name' => $info['volumeInfo']['title'].($info['accessInfo']['pdf']['downloadLink'] ? ".pdf" : ".epub"),
-            'size' => filesize($tmp_path),
-            'type' => $info['accessInfo']['pdf']['downloadLink'] ? "application/pdf" : "application/epub+zip",
-            'tmp_path' => $tmp_path
-        );
-        return $file;
+        if (!$download) {
+            var_dump($info);
+        } else {
+            file_put_contents($tmp_path, file_get_contents($download));
+            $file = array(
+                'name' => $info['volumeInfo']['title'] . ($info['accessInfo']['pdf']['downloadLink'] ? ".pdf" : ".epub"),
+                'size' => filesize($tmp_path),
+                'type' => $info['accessInfo']['pdf']['downloadLink'] ? "application/pdf" : "application/epub+zip",
+                'tmp_path' => $tmp_path,
+                'description' => $info['volumeInfo']['publishedDate'].", ".implode(", ", (array) $info['volumeInfo']['authors'])
+            );
+            return $file;
+        }
     }
 
     public function filesystemConfigurationURL()
