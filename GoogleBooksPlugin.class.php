@@ -19,7 +19,19 @@ class GoogleBooksPlugin extends StudIPPlugin implements FilesystemPlugin {
 
     public function getPreparedFile($file_id)
     {
-        //Daten nach Stud.IP schieben und File-Objekt zurückliefern:
+        $url = "https://www.googleapis.com/books/v1/volumes/".$file_id."?key=".urlencode(self::$googlebooksapikey);
+        $info = file_get_contents($url);
+        $info = studip_utf8decode(json_decode($info, true));
+        $download = $info['accessInfo']['pdf']['downloadLink'] ?: $info['accessInfo']['epub']['downloadLink'];
+        $tmp_path = $GLOBALS['TMP_PATH']."/".md5(uniqid());
+        file_put_contents($tmp_path, file_get_contents($download));
+        $file = array(
+            'name' => $info['volumeInfo']['title'].($info['accessInfo']['pdf']['downloadLink'] ? ".pdf" : ".epub"),
+            'size' => filesize($tmp_path),
+            'type' => $info['accessInfo']['pdf']['downloadLink'] ? "application/pdf" : "application/epub+zip",
+            'tmp_path' => $tmp_path
+        );
+        return $file;
     }
 
     public function filesystemConfigurationURL()
